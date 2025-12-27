@@ -7,13 +7,15 @@
 export {
   exportToExcel,
   exportToExcelStyled,
-  importTimesheetFromExcel
+  importTimesheetFromExcel,
+  downloadTimesheetTemplate
 } from './timesheet-excel';
 
 // Employee/HR operations
 export {
   exportEmployeesToExcel,
-  importEmployeesFromExcel
+  importEmployeesFromExcel,
+  downloadEmployeeTemplate
 } from './employee-excel';
 
 // Target operations
@@ -21,7 +23,8 @@ export {
   exportTargetsToExcel,
   exportTargetsToJSON,
   importTargetsFromJSON,
-  importTargetsFromExcel
+  importTargetsFromExcel,
+  downloadTargetTemplate
 } from './target-excel';
 
 // Payroll operations

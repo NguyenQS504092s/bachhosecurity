@@ -9,14 +9,17 @@ export {
   exportToExcel,
   exportToExcelStyled,
   importTimesheetFromExcel,
+  downloadTimesheetTemplate,
   // Employee
   exportEmployeesToExcel,
   importEmployeesFromExcel,
+  downloadEmployeeTemplate,
   // Target
   exportTargetsToExcel,
   exportTargetsToJSON,
   importTargetsFromJSON,
   importTargetsFromExcel,
+  downloadTargetTemplate,
   // Payroll
   exportPayrollToExcel
 } from './excel';

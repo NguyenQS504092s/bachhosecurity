@@ -64,6 +64,59 @@ export const exportTargetsToExcel = (
 };
 
 /**
+ * Download target import template
+ */
+export const downloadTargetTemplate = (): void => {
+  const wb = XLSX.utils.book_new();
+
+  // Instructions sheet
+  const instructionData: string[][] = [];
+  instructionData.push(['HƯỚNG DẪN NHẬP MỤC TIÊU']);
+  instructionData.push([]);
+  instructionData.push(['Cách 1: Multi-sheet (mỗi sheet = 1 mục tiêu)']);
+  instructionData.push(['- Tên sheet = Tên mục tiêu']);
+  instructionData.push(['- Mỗi sheet có các cột: STT, Mã NV, Họ Tên, Ca Trực']);
+  instructionData.push([]);
+  instructionData.push(['Cách 2: Single-sheet (1 sheet chứa tất cả)']);
+  instructionData.push(['- Cột: Mục Tiêu, Mã NV, Họ Tên, Ca Trực']);
+  instructionData.push([]);
+  instructionData.push(['LƯU Ý:']);
+  instructionData.push(['- Mã NV phải tồn tại trong danh sách nhân sự']);
+  instructionData.push(['- Ca Trực định dạng 24h: "08:00 - 17:00"']);
+
+  const instructionWs = XLSX.utils.aoa_to_sheet(instructionData);
+  instructionWs['!cols'] = [{ wch: 60 }];
+  XLSX.utils.book_append_sheet(wb, instructionWs, 'Hướng Dẫn');
+
+  // Sample target sheet 1
+  const target1Data: (string | number)[][] = [];
+  target1Data.push(['MỤC TIÊU: Văn Phòng Chính']);
+  target1Data.push([]);
+  target1Data.push(['STT', 'Mã NV', 'Họ Tên', 'Ca Trực']);
+  target1Data.push([1, '001', 'Nguyễn Văn A', '08:00 - 17:00']);
+  target1Data.push([2, '002', 'Trần Thị B', '06:00 - 14:00']);
+  target1Data.push([3, '', '', '']);
+
+  const target1Ws = XLSX.utils.aoa_to_sheet(target1Data);
+  target1Ws['!cols'] = [{ wch: 5 }, { wch: 10 }, { wch: 25 }, { wch: 15 }];
+  XLSX.utils.book_append_sheet(wb, target1Ws, 'Văn Phòng Chính');
+
+  // Sample target sheet 2
+  const target2Data: (string | number)[][] = [];
+  target2Data.push(['MỤC TIÊU: Kho Hàng']);
+  target2Data.push([]);
+  target2Data.push(['STT', 'Mã NV', 'Họ Tên', 'Ca Trực']);
+  target2Data.push([1, '003', 'Lê Văn C', '22:00 - 06:00']);
+  target2Data.push([2, '', '', '']);
+
+  const target2Ws = XLSX.utils.aoa_to_sheet(target2Data);
+  target2Ws['!cols'] = [{ wch: 5 }, { wch: 10 }, { wch: 25 }, { wch: 15 }];
+  XLSX.utils.book_append_sheet(wb, target2Ws, 'Kho Hàng');
+
+  XLSX.writeFile(wb, 'Mau_NhapMucTieu.xlsx');
+};
+
+/**
  * Export targets to JSON (for backup/restore)
  */
 export const exportTargetsToJSON = (targets: Target[]): void => {
@@ -187,7 +240,7 @@ export const importTargetsFromExcel = (
               if (emp) {
                 roster.push({
                   employeeId: emp.id,
-                  shift: shift || '08h00 - 17h00'
+                  shift: shift || '08:00 - 17:00'
                 });
               } else {
                 errors.push(`Sheet "${sheetName}": Không tìm thấy nhân viên mã "${code}"`);

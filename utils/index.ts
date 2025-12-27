@@ -14,3 +14,14 @@ export {
 
 // Auth utilities
 export { hashPassword, verifyPassword } from './auth';
+
+// Timesheet helpers
+export {
+  generateDaysInfo as generateTimesheetDays,
+  calculateTotal,
+  getCellColor,
+  sortByTargetOrder,
+  getStickyPositions,
+  COL_WIDTHS,
+  createRowsFromTarget
+} from './timesheet-helpers';

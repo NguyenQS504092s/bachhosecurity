@@ -7,6 +7,8 @@
 // Sheet configuration
 const SHEETS_ID = import.meta.env.VITE_GOOGLE_SHEETS_ID || '174JidXU87O9QZnkD0qfwvYimPpj8STIqIJgzVDyPQkM'
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY
+// GID is the tab ID in Google Sheets (from URL gid=xxx)
+const SHEETS_GID = import.meta.env.VITE_GOOGLE_SHEETS_GID || '1964190322'
 
 // Sheet row structure from spreadsheet
 export interface SheetRow {
@@ -42,7 +44,7 @@ async function readSheetDataViaCsv(): Promise<SheetRow[]> {
     throw new Error('Missing VITE_GOOGLE_SHEETS_ID in .env')
   }
 
-  const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/export?format=csv&gid=0`
+  const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/export?format=csv&gid=${SHEETS_GID}`
 
   try {
     const response = await fetch(csvUrl)

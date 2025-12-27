@@ -28,3 +28,13 @@ export {
   saveAllTimesheets,
   importInitialData
 } from './timesheet-service'
+
+// Shift operations
+export {
+  DEFAULT_SHIFTS,
+  getCustomShifts,
+  saveCustomShifts,
+  addCustomShift,
+  removeCustomShift,
+  getAllShifts
+} from './shift-service'

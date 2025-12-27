@@ -200,7 +200,7 @@ CHỈ TRẢ VỀ JSON THUẦN TÚY, KHÔNG CÓ MARKDOWN HAY TEXT KHÁC.`;
           code: emp.code || `NV${String(index + 1).padStart(3, '0')}`,
           name: emp.name || `Nhân viên ${index + 1}`,
           department: emp.department || 'Chưa xác định',
-          shift: existing?.shift || '08h00 - 17h00',
+          shift: existing?.shift || '08:00 - 17:00',
           attendance: emp.attendance || {},
           password: existing?.password || '123',
           role: existing?.role || 'staff' as const

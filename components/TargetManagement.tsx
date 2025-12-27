@@ -1,25 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Employee, Target, RosterItem } from '../types';
-import { MapPin, Users, Plus, Trash2, Save, X, Download, Upload } from 'lucide-react';
-import { exportTargetsToExcel, exportTargetsToJSON, importTargetsFromJSON, importTargetsFromExcel } from '../utils/excel-export';
+import { MapPin, Users, Plus, Trash2, Save, X, Download, Upload, Clock, Edit2, FileSpreadsheet } from 'lucide-react';
+import { exportTargetsToExcel, exportTargetsToJSON, importTargetsFromJSON, importTargetsFromExcel, downloadTargetTemplate } from '../utils/excel-export';
+import { DEFAULT_SHIFTS, getCustomShifts, saveCustomShifts as saveShiftsToFirebase } from '../services/firebase';
 
 interface TargetManagementProps {
   targets: Target[];
   employees: Employee[];
   onUpdateTargets: (newTargets: Target[]) => void;
 }
-
-// Common shift time options
-const SHIFT_OPTIONS = [
-  '06h00 - 14h00',
-  '08h00 - 17h00',
-  '14h00 - 22h00',
-  '18h00 - 06h00',
-  '22h00 - 06h00',
-  '00h00 - 08h00',
-  '12h00 - 20h00',
-  '20h00 - 04h00'
-];
 
 export const TargetManagement: React.FC<TargetManagementProps> = ({ targets, employees, onUpdateTargets }) => {
   const [editingTarget, setEditingTarget] = useState<Target | null>(null);
@@ -30,6 +19,97 @@ export const TargetManagement: React.FC<TargetManagementProps> = ({ targets, emp
   // Form state
   const [formName, setFormName] = useState('');
   const [formRoster, setFormRoster] = useState<RosterItem[]>([]);
+
+  // Custom shift management
+  const [customShifts, setCustomShifts] = useState<string[]>([]);
+  const [showShiftManager, setShowShiftManager] = useState(false);
+  const [newShiftStart, setNewShiftStart] = useState('08:00');
+  const [newShiftEnd, setNewShiftEnd] = useState('17:00');
+  const [isLoadingShifts, setIsLoadingShifts] = useState(true);
+
+  // Combined shift options (default + custom)
+  const shiftOptions = [...DEFAULT_SHIFTS, ...customShifts];
+
+  // Load custom shifts from Firebase
+  useEffect(() => {
+    const loadShifts = async () => {
+      try {
+        const shifts = await getCustomShifts();
+        setCustomShifts(shifts);
+      } catch (error) {
+        console.error('[TargetManagement] Failed to load shifts:', error);
+      } finally {
+        setIsLoadingShifts(false);
+      }
+    };
+    loadShifts();
+  }, []);
+
+  // Save custom shifts to Firebase
+  const saveCustomShifts = async (shifts: string[]) => {
+    setCustomShifts(shifts);
+    try {
+      await saveShiftsToFirebase(shifts);
+      console.log('[TargetManagement] Shifts saved to Firebase');
+    } catch (error) {
+      console.error('[TargetManagement] Failed to save shifts:', error);
+    }
+  };
+
+  // Add new custom shift (24h format)
+  const handleAddCustomShift = () => {
+    const newShift = `${newShiftStart} - ${newShiftEnd}`;
+    if (!shiftOptions.includes(newShift)) {
+      saveCustomShifts([...customShifts, newShift]);
+      setNewShiftStart('08:00');
+      setNewShiftEnd('17:00');
+    }
+  };
+
+  // Remove custom shift
+  const handleRemoveCustomShift = (shift: string) => {
+    saveCustomShifts(customShifts.filter(s => s !== shift));
+  };
+
+  // Edit state for shifts
+  const [editingShiftIndex, setEditingShiftIndex] = useState<number | null>(null);
+  const [editShiftStart, setEditShiftStart] = useState('');
+  const [editShiftEnd, setEditShiftEnd] = useState('');
+
+  // Start editing a shift (24h format: "08:00 - 17:00")
+  const startEditShift = (shift: string, index: number) => {
+    const parts = shift.split(' - ');
+    if (parts.length === 2) {
+      setEditShiftStart(parts[0]);
+      setEditShiftEnd(parts[1]);
+      setEditingShiftIndex(index);
+    }
+  };
+
+  // Save edited shift (24h format)
+  const saveEditedShift = (originalShift: string) => {
+    const newShift = `${editShiftStart} - ${editShiftEnd}`;
+    if (newShift === originalShift) {
+      setEditingShiftIndex(null);
+      return;
+    }
+
+    // Check if new shift already exists
+    if (shiftOptions.includes(newShift)) {
+      alert('Ca này đã tồn tại!');
+      return;
+    }
+
+    const isCustom = customShifts.includes(originalShift);
+    if (isCustom) {
+      // Update custom shift
+      saveCustomShifts(customShifts.map(s => s === originalShift ? newShift : s));
+    } else {
+      // "Edit" default shift = add new custom shift
+      saveCustomShifts([...customShifts, newShift]);
+    }
+    setEditingShiftIndex(null);
+  };
 
   const handleCreate = () => {
     setIsCreating(true);
@@ -193,6 +273,13 @@ export const TargetManagement: React.FC<TargetManagementProps> = ({ targets, emp
               <Download size={12} /> JSON
             </button>
             <button
+              onClick={downloadTargetTemplate}
+              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+              title="Tải mẫu Excel để nhập mục tiêu"
+            >
+              <FileSpreadsheet size={12} /> Mẫu
+            </button>
+            <button
               onClick={handleImportClick}
               className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200"
               title="Nhập từ Excel hoặc JSON"
@@ -200,6 +287,114 @@ export const TargetManagement: React.FC<TargetManagementProps> = ({ targets, emp
               <Upload size={12} /> Nhập
             </button>
           </div>
+          {/* Shift Manager Button */}
+          <button
+            onClick={() => setShowShiftManager(!showShiftManager)}
+            className="w-full mt-2 flex items-center justify-center gap-1 px-2 py-1.5 text-xs bg-orange-100 text-orange-700 rounded hover:bg-orange-200"
+            title="Quản lý khung giờ ca trực"
+          >
+            <Clock size={12} /> Quản Lý Ca Trực
+          </button>
+          {/* Shift Manager Panel */}
+          {showShiftManager && (
+            <div className="mt-2 p-3 bg-white border rounded-lg shadow-sm">
+              <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                <Clock size={14} className="mr-1" /> Khung Giờ Ca Trực
+              </h4>
+              {/* Add new shift */}
+              <div className="flex gap-1 mb-2">
+                <input
+                  type="time"
+                  value={newShiftStart}
+                  onChange={(e) => setNewShiftStart(e.target.value)}
+                  className="flex-1 px-2 py-1 text-xs border rounded"
+                />
+                <span className="text-gray-400 self-center">-</span>
+                <input
+                  type="time"
+                  value={newShiftEnd}
+                  onChange={(e) => setNewShiftEnd(e.target.value)}
+                  className="flex-1 px-2 py-1 text-xs border rounded"
+                />
+                <button
+                  onClick={handleAddCustomShift}
+                  className="px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600"
+                  title="Thêm ca mới"
+                >
+                  <Plus size={12} />
+                </button>
+              </div>
+              {/* List of shifts */}
+              <div className="max-h-48 overflow-y-auto space-y-1">
+                {isLoadingShifts ? (
+                  <div className="text-xs text-gray-400 text-center py-2">Đang tải...</div>
+                ) : (
+                  shiftOptions.map((shift, idx) => {
+                    const isCustom = customShifts.includes(shift);
+                    const isEditing = editingShiftIndex === idx;
+
+                    return (
+                      <div key={idx} className="flex items-center gap-1 text-xs bg-gray-50 px-2 py-1 rounded">
+                        {isEditing ? (
+                          <>
+                            <input
+                              type="time"
+                              value={editShiftStart}
+                              onChange={(e) => setEditShiftStart(e.target.value)}
+                              className="flex-1 px-1 py-0.5 border rounded text-xs"
+                            />
+                            <span className="text-gray-400">-</span>
+                            <input
+                              type="time"
+                              value={editShiftEnd}
+                              onChange={(e) => setEditShiftEnd(e.target.value)}
+                              className="flex-1 px-1 py-0.5 border rounded text-xs"
+                            />
+                            <button
+                              onClick={() => saveEditedShift(shift)}
+                              className="text-green-500 hover:text-green-700 p-0.5"
+                              title="Lưu"
+                            >
+                              <Save size={12} />
+                            </button>
+                            <button
+                              onClick={() => setEditingShiftIndex(null)}
+                              className="text-gray-400 hover:text-gray-600 p-0.5"
+                              title="Hủy"
+                            >
+                              <X size={12} />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <span className={`flex-1 ${isCustom ? 'text-orange-600 font-medium' : 'text-gray-600'}`}>
+                              {shift} {isCustom && '(tùy chỉnh)'}
+                            </span>
+                            <button
+                              onClick={() => startEditShift(shift, idx)}
+                              className="text-blue-400 hover:text-blue-600 p-0.5"
+                              title="Sửa"
+                            >
+                              <Edit2 size={12} />
+                            </button>
+                            {isCustom && (
+                              <button
+                                onClick={() => handleRemoveCustomShift(shift)}
+                                className="text-red-400 hover:text-red-600 p-0.5"
+                                title="Xóa"
+                              >
+                                <X size={12} />
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
           <input
             ref={fileInputRef}
             type="file"
@@ -308,7 +503,7 @@ export const TargetManagement: React.FC<TargetManagementProps> = ({ targets, emp
                             className="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                          />
                          <datalist id={`shift-options-${index}`}>
-                           {SHIFT_OPTIONS.map((shift) => (
+                           {shiftOptions.map((shift) => (
                              <option key={shift} value={shift} />
                            ))}
                          </datalist>

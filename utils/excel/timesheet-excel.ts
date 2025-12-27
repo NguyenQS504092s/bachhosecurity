@@ -9,6 +9,7 @@ import { generateDaysInfo, calculateTotal } from './common';
 
 /**
  * Export timesheet data to Excel file
+ * Headers: ID, MSNV, Họ và tên, Mục tiêu, Năm, Tháng, 01-31, Tổng Công
  */
 export const exportToExcel = (
   data: Employee[],
@@ -24,29 +25,33 @@ export const exportToExcel = (
   const titleRow = [`BẢNG CHẤM CÔNG THÁNG ${month + 1}/${year} - BẠCH HỔ SECURITY`];
   const emptyRow: string[] = [];
 
-  const headerRow1 = ['STT', 'Mã', 'Họ Và Tên', 'Mục Tiêu'];
+  // Header format: ID, MSNV, Họ và tên, Mục tiêu, Năm, Tháng, 01-31
+  const headerRow1 = ['ID', 'MSNV', 'Họ và tên', 'Mục tiêu', 'Năm', 'Tháng'];
   days.forEach(day => {
     headerRow1.push(day.date.toString().padStart(2, '0'));
   });
   headerRow1.push('Tổng Công');
 
-  const headerRow2 = ['', '', '', ''];
+  // Day of week sub-header
+  const headerRow2 = ['', '', '', '', '', ''];
   days.forEach(day => {
     headerRow2.push(day.dayOfWeek);
   });
   headerRow2.push('');
 
   // Data rows
-  const dataRows = data.map((emp, index) => {
+  const dataRows = data.map((emp) => {
     const row: (string | number)[] = [
-      index + 1,
+      emp.id || '',
       emp.code || '',
       emp.name || '',
-      emp.department || ''
+      emp.department || '',
+      year,
+      month + 1
     ];
 
     days.forEach(day => {
-      const val = emp.attendance[day.date] || '';
+      const val = emp.attendance?.[day.date] || '';
       row.push(val);
     });
 
@@ -56,7 +61,7 @@ export const exportToExcel = (
 
   // Summary row
   const totalAttendance = data.reduce((acc, emp) => acc + calculateTotal(emp.attendance), 0);
-  const summaryRow: (string | number)[] = ['', '', '', `Tổng Số: ${totalAttendance} công`];
+  const summaryRow: (string | number)[] = ['', '', '', `Tổng Số: ${totalAttendance} công`, '', ''];
   days.forEach(() => summaryRow.push(''));
   summaryRow.push(totalAttendance);
 
@@ -76,17 +81,19 @@ export const exportToExcel = (
 
   // Set column widths
   const colWidths = [
-    { wch: 5 },   // STT
-    { wch: 8 },   // Mã
-    { wch: 22 },  // Họ Và Tên
-    { wch: 15 },  // Mục Tiêu
+    { wch: 12 },  // ID
+    { wch: 10 },  // MSNV
+    { wch: 22 },  // Họ và tên
+    { wch: 15 },  // Mục tiêu
+    { wch: 6 },   // Năm
+    { wch: 6 },   // Tháng
     ...days.map(() => ({ wch: 5 })),
     { wch: 10 }   // Tổng Công
   ];
   ws['!cols'] = colWidths;
 
   // Merge title cell
-  const totalCols = 4 + days.length + 1;
+  const totalCols = 6 + days.length + 1;
   ws['!merges'] = [
     { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } }
   ];
@@ -99,6 +106,7 @@ export const exportToExcel = (
 
 /**
  * Export timesheet with styling
+ * Headers: ID, MSNV, Họ và tên, Mục tiêu, Năm, Tháng, 01-31, Tổng Công
  */
 export const exportToExcelStyled = (
   data: Employee[],
@@ -119,27 +127,29 @@ export const exportToExcelStyled = (
   wsData.push([]);
 
   // Headers
-  const header1: (string | number)[] = ['STT', 'Mã NV', 'Họ Và Tên', 'Mục Tiêu'];
+  const header1: (string | number)[] = ['ID', 'MSNV', 'Họ và tên', 'Mục tiêu', 'Năm', 'Tháng'];
   days.forEach(day => header1.push(day.date));
   header1.push('Tổng');
   wsData.push(header1);
 
-  const header2: (string | number)[] = ['', '', '', ''];
+  const header2: (string | number)[] = ['', '', '', '', '', ''];
   days.forEach(day => header2.push(day.dayOfWeek));
   header2.push('');
   wsData.push(header2);
 
   // Data rows
-  data.forEach((emp, index) => {
+  data.forEach((emp) => {
     const row: (string | number)[] = [
-      index + 1,
+      emp.id || '',
       emp.code || '',
       emp.name || '',
-      emp.department || ''
+      emp.department || '',
+      year,
+      month + 1
     ];
 
     days.forEach(day => {
-      const val = emp.attendance[day.date];
+      const val = emp.attendance?.[day.date];
       row.push(val || '');
     });
 
@@ -151,17 +161,19 @@ export const exportToExcelStyled = (
 
   // Summary
   const totalAttendance = data.reduce((acc, emp) => acc + calculateTotal(emp.attendance), 0);
-  const summaryRow: (string | number)[] = ['', '', 'TỔNG CỘNG:', ''];
+  const summaryRow: (string | number)[] = ['', '', 'TỔNG CỘNG:', '', '', ''];
   days.forEach(() => summaryRow.push(''));
   summaryRow.push(totalAttendance);
   wsData.push(summaryRow);
 
   const ws = XLSX.utils.aoa_to_sheet(wsData);
   ws['!cols'] = [
-    { wch: 5 },
-    { wch: 8 },
-    { wch: 22 },
-    { wch: 12 },
+    { wch: 12 },  // ID
+    { wch: 10 },  // MSNV
+    { wch: 22 },  // Họ và tên
+    { wch: 15 },  // Mục tiêu
+    { wch: 6 },   // Năm
+    { wch: 6 },   // Tháng
     ...days.map(() => ({ wch: 4 })),
     { wch: 8 }
   ];
@@ -176,6 +188,87 @@ export const exportToExcelStyled = (
 
   XLSX.utils.book_append_sheet(wb, ws, `Tháng ${month + 1}`);
   XLSX.writeFile(wb, filename || defaultFilename);
+};
+
+/**
+ * Download timesheet import template
+ */
+export const downloadTimesheetTemplate = (year: number, month: number): void => {
+  const days = generateDaysInfo(year, month);
+  const wsData: (string | number)[][] = [];
+
+  // Title
+  wsData.push(['MẪU NHẬP BẢNG CHẤM CÔNG']);
+  wsData.push(['Hướng dẫn: Điền dữ liệu từ dòng 6 trở đi, không xóa header']);
+  wsData.push([]);
+
+  // Headers
+  const header1: (string | number)[] = ['ID', 'MSNV', 'Họ và tên', 'Mục tiêu', 'Năm', 'Tháng'];
+  days.forEach(day => header1.push(day.date));
+  header1.push('Tổng');
+  wsData.push(header1);
+
+  // Day of week sub-header
+  const header2: (string | number)[] = ['', '', '', '', '', ''];
+  days.forEach(day => header2.push(day.dayOfWeek));
+  header2.push('');
+  wsData.push(header2);
+
+  // Sample data rows
+  const sample1: (string | number)[] = ['', '001', 'Nguyễn Văn A', 'Văn Phòng', year, month + 1];
+  days.forEach((day, idx) => {
+    // Sample pattern: weekdays = 1, weekends = empty, some holidays = P
+    if (day.isWeekend) {
+      sample1.push('');
+    } else if (idx === 4 || idx === 15) {
+      sample1.push('P'); // Sample leave days
+    } else {
+      sample1.push('1');
+    }
+  });
+  sample1.push('');
+  wsData.push(sample1);
+
+  const sample2: (string | number)[] = ['', '002', 'Trần Thị B', 'Kho Hàng', year, month + 1];
+  days.forEach(day => {
+    if (day.isWeekend) {
+      sample2.push('');
+    } else {
+      sample2.push('1');
+    }
+  });
+  sample2.push('');
+  wsData.push(sample2);
+
+  // Empty row for user to fill
+  const emptyRow: (string | number)[] = ['', '', '', '', year, month + 1];
+  days.forEach(() => emptyRow.push(''));
+  emptyRow.push('');
+  wsData.push(emptyRow);
+
+  // Instructions
+  wsData.push([]);
+  wsData.push(['GHI CHÚ:']);
+  wsData.push(['- MSNV: Bắt buộc, dùng để khớp với nhân viên có sẵn']);
+  wsData.push(['- Họ và tên: Tùy chọn (dùng MSNV để khớp)']);
+  wsData.push(['- Giá trị chấm công: 1 (đủ công), 0.5 (nửa công), P (phép), K (không phép), X (nghỉ)']);
+  wsData.push(['- Cột Tổng sẽ được tính tự động khi nhập']);
+
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = [
+    { wch: 12 },  // ID
+    { wch: 10 },  // MSNV
+    { wch: 22 },  // Họ và tên
+    { wch: 15 },  // Mục tiêu
+    { wch: 6 },   // Năm
+    { wch: 6 },   // Tháng
+    ...days.map(() => ({ wch: 4 })),
+    { wch: 8 }
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Mẫu Chấm Công');
+  XLSX.writeFile(wb, `Mau_ChamCong_T${month + 1}_${year}.xlsx`);
 };
 
 /**
@@ -264,7 +357,7 @@ export const importTimesheetFromExcel = (
             code: code || existingEmp?.code || `NV${employees.length + 1}`,
             name: name || existingEmp?.name || '',
             department: (deptColIndex >= 0 ? String(row[deptColIndex] || '') : '') || existingEmp?.department || 'Chưa xác định',
-            shift: existingEmp?.shift || '08h00 - 17h00',
+            shift: existingEmp?.shift || '08:00 - 17:00',
             attendance,
             password: existingEmp?.password || '123',
             role: existingEmp?.role || 'staff'

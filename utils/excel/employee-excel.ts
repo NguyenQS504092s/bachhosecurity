@@ -57,6 +57,52 @@ export const exportEmployeesToExcel = (
 };
 
 /**
+ * Download employee import template
+ */
+export const downloadEmployeeTemplate = (): void => {
+  const wsData: (string | number)[][] = [];
+
+  // Title
+  wsData.push(['MẪU NHẬP DANH SÁCH NHÂN SỰ']);
+  wsData.push(['Hướng dẫn: Điền thông tin từ dòng 5 trở đi, không xóa dòng header']);
+  wsData.push([]);
+
+  // Headers
+  wsData.push(['STT', 'Mã NV', 'Họ Tên', 'Phòng Ban', 'Quyền Hạn', 'Mật Khẩu', 'Đơn Giá']);
+
+  // Sample data rows
+  wsData.push([1, '001', 'Nguyễn Văn A', 'Văn Phòng', 'Nhân Viên', '123', 200000]);
+  wsData.push([2, '002', 'Trần Thị B', 'Kỹ Thuật', 'Quản Trị', '456', 250000]);
+  wsData.push([3, '', '', '', '', '', '']);
+
+  // Instructions
+  wsData.push([]);
+  wsData.push(['GHI CHÚ:']);
+  wsData.push(['- Mã NV: Bắt buộc, không trùng với nhân viên đã có']);
+  wsData.push(['- Họ Tên: Bắt buộc']);
+  wsData.push(['- Phòng Ban: Tùy chọn, mặc định "Văn Phòng". Nếu mục tiêu chưa có sẽ tự động tạo mới']);
+  wsData.push(['- Quyền Hạn: "Quản Trị" hoặc "Nhân Viên" (mặc định)']);
+  wsData.push(['- Mật Khẩu: Tùy chọn, mặc định là "123"']);
+  wsData.push(['- Đơn Giá: Giá tiền mỗi công, mặc định 200,000 VNĐ']);
+  wsData.push(['- Thưởng/Phạt: Nhập riêng theo tháng tại trang Quản lý Nhân sự']);
+
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = [
+    { wch: 5 },
+    { wch: 10 },
+    { wch: 25 },
+    { wch: 15 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 12 }
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Mẫu Nhân Sự');
+  XLSX.writeFile(wb, 'Mau_NhapNhanSu.xlsx');
+};
+
+/**
  * Import employees from Excel file
  */
 export const importEmployeesFromExcel = (
@@ -84,6 +130,7 @@ export const importEmployeesFromExcel = (
         let deptColIndex = -1;
         let roleColIndex = -1;
         let passColIndex = -1;
+        let dailyRateColIndex = -1;
 
         for (let i = 0; i < Math.min(10, jsonData.length); i++) {
           const row = jsonData[i];
@@ -96,6 +143,7 @@ export const importEmployeesFromExcel = (
             if (cell.includes('phòng') || cell.includes('ban')) deptColIndex = j;
             if (cell.includes('quyền')) roleColIndex = j;
             if (cell.includes('mật') || cell.includes('khẩu')) passColIndex = j;
+            if ((cell.includes('lương') && cell.includes('ngày')) || cell.includes('đơn giá')) dailyRateColIndex = j;
           }
 
           if (codeColIndex >= 0 && nameColIndex >= 0) {
@@ -137,15 +185,18 @@ export const importEmployeesFromExcel = (
           const roleStr = String(row[roleColIndex] || '').toLowerCase();
           const role: 'admin' | 'staff' = roleStr.includes('quản') || roleStr.includes('admin') ? 'admin' : 'staff';
 
+          const dailyRate = dailyRateColIndex >= 0 ? parseInt(String(row[dailyRateColIndex] || '')) || 200000 : 200000;
+
           employees.push({
             id: Math.random().toString(36).substr(2, 9),
             code,
             name,
             department: deptColIndex >= 0 ? String(row[deptColIndex] || 'Văn Phòng') : 'Văn Phòng',
-            shift: '08h00 - 17h00',
+            shift: '08:00 - 17:00',
             attendance: {},
             password: passColIndex >= 0 ? String(row[passColIndex] || '123') : '123',
-            role
+            role,
+            dailyRate
           });
         }
 
