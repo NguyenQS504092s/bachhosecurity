@@ -19,7 +19,7 @@ vi.mock('firebase/database', () => ({
 }))
 
 // Mock the lib/firebase module
-vi.mock('../../lib/firebase', () => ({
+vi.mock('../lib/firebase', () => ({
   app: null,
   db: null,
   isFirebaseAvailable: vi.fn(() => false),
@@ -27,7 +27,7 @@ vi.mock('../../lib/firebase', () => ({
 }))
 
 // Mock Firebase realtime-database-service
-vi.mock('../../services/realtime-database-service', () => ({
+vi.mock('../services/realtime-database-service', () => ({
   getAllEmployees: vi.fn().mockResolvedValue([]),
   getEmployeeById: vi.fn().mockResolvedValue(null),
   createEmployee: vi.fn().mockResolvedValue('mock-id'),
@@ -45,7 +45,7 @@ vi.mock('../../services/realtime-database-service', () => ({
 }))
 
 // Mock sheets service
-vi.mock('../../services/sheets-service', () => ({
+vi.mock('../services/sheets-service', () => ({
   readSheetData: vi.fn().mockResolvedValue([]),
   getSheetMetadata: vi.fn().mockResolvedValue({ title: 'Test', headers: [], rowCount: 0 }),
   sheetRowToEmployee: vi.fn().mockImplementation(row => row),
@@ -53,7 +53,7 @@ vi.mock('../../services/sheets-service', () => ({
 }))
 
 // Mock sync service
-vi.mock('../../services/sync-service', () => ({
+vi.mock('../services/sync-service', () => ({
   syncFromSheets: vi.fn().mockResolvedValue({
     success: true,
     timestamp: new Date(),
@@ -68,7 +68,7 @@ vi.mock('../../services/sync-service', () => ({
 }))
 
 // Mock backup service
-vi.mock('../../services/backup-service', () => ({
+vi.mock('../services/backup-service', () => ({
   exportAsJson: vi.fn().mockResolvedValue(new Blob(['{}'], { type: 'application/json' })),
   downloadBackup: vi.fn(),
   createAndDownloadBackup: vi.fn().mockResolvedValue(undefined)
