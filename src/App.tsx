@@ -11,7 +11,7 @@ import { useTargets } from './features/targets';
 import { useTimesheet } from './features/timesheet';
 import { TimesheetGrid } from './components/timesheet';
 import { HRManagement } from './components/hr';
-import { TargetManagement } from './components/TargetManagement';
+import { TargetManagement } from './features/targets';
 import { ImageCapture, SyncButton, BackupButton } from './components/shared';
 import { Employee, Target } from './types';
 import { FileDown, FileUp, AlertCircle, Camera, DollarSign, FileSpreadsheet } from 'lucide-react';
