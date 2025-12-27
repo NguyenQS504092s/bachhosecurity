@@ -26,6 +26,7 @@ dist-ssr
 .vercel
 plans/
 
+
 # Environment variables
 .env
 .env.local
