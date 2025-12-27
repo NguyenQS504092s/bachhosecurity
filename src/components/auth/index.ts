@@ -2,4 +2,4 @@
  * Auth components barrel export
  */
 
-export { Login } from './Login'
+export { Login } from './login'

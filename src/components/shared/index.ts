@@ -2,7 +2,7 @@
  * Shared components barrel export
  */
 
-export { SyncStatus, SyncButton } from './SyncButton'
-export { BackupButton } from './BackupButton'
-export { Settings } from './Settings'
-export { ImageCapture } from './ImageCapture'
+export { SyncStatus, SyncButton } from './sync-button'
+export { BackupButton } from './backup-button'
+export { Settings } from './settings'
+export { ImageCapture } from './image-capture'

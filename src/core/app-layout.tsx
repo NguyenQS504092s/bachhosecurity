@@ -3,10 +3,11 @@
  * Main application shell with header and content area
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
 import { AppHeader } from './app-header';
 import { useAuth } from '../features/auth';
+import { useEmployees } from '../features/hr';
 import { Login } from '../components/auth';
 import { Settings } from '../components/shared';
 
@@ -24,11 +25,22 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   isLoading = false
 }) => {
   const { currentUser, isLoggedIn, login, logout } = useAuth();
+  const { employees, isLoading: employeesLoading } = useEmployees();
   const [currentView, setCurrentView] = useState<ViewType>('timesheet');
   const [showSettings, setShowSettings] = useState(false);
 
+  // Handle login with code and password
+  const handleLogin = useCallback(async (code: string, pass: string) => {
+    const user = employees.find(e => e.code === code && e.password === pass);
+    if (user) {
+      login(user);
+    } else {
+      throw new Error("Mã nhân viên hoặc mật khẩu không đúng.");
+    }
+  }, [employees, login]);
+
   // Loading state
-  if (isLoading) {
+  if (isLoading || employeesLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -41,7 +53,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
   // Login screen
   if (!isLoggedIn) {
-    return <Login onLogin={login} />;
+    return <Login onLogin={handleLogin} />;
   }
 
   return (
