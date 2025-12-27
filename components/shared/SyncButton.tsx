@@ -12,7 +12,7 @@ import {
   CloudOff,
   Loader2
 } from 'lucide-react'
-import { useSheetsSync } from '../../hooks/useSheetsSync'
+import { useSheetsSync } from '../../hooks/use-sheets-sync'
 
 interface SyncStatusProps {
   onSyncComplete?: () => void

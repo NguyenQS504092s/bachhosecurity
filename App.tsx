@@ -1,12 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { TimesheetGrid } from './components/TimesheetGrid';
-import { Login } from './components/Login';
-import { HRManagement } from './components/HRManagement';
+import { TimesheetGrid } from './components/timesheet';
+import { Login } from './components/auth';
+import { HRManagement } from './components/hr';
 import { TargetManagement } from './components/TargetManagement';
-import { Settings } from './components/Settings';
-import { ImageCapture } from './components/ImageCapture';
-import { SyncButton } from './components/SyncStatus';
-import { BackupButton } from './components/BackupButton';
+import { Settings, ImageCapture, SyncButton, BackupButton } from './components/shared';
 import { Employee, Target } from './types';
 import { FileDown, FileUp, AlertCircle, LogOut, LayoutDashboard, Shield, MapPin, Settings as SettingsIcon, Camera, DollarSign, Loader2, FileSpreadsheet } from 'lucide-react';
 import { exportToExcel, importTimesheetFromExcel, exportPayrollToExcel, downloadTimesheetTemplate } from './utils/excel-export';
